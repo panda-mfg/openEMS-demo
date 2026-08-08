@@ -1,0 +1,56 @@
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Build and local-install trees
+build/
+build-*/
+local/
+CMakeFiles/
+
+# Simulation and benchmark run directories
+results/
+results_*/
+simulation/
+simulation_*/
+tuning/
+tuning_*/
+trial_*/
+runs/
+logs/
+
+# openEMS/CSXCAD generated models and field data
+*.xml
+*.h5
+*.hdf5
+*.npz
+*.vtk
+*.vtr
+*.vts
+*.s1p
+*.s2p
+*.s4p
+*.s16p
+*.s36p
+port_it_*
+port_ut_*
+et
+ht
+
+# Generated reports, tables, plots, and logs
+*.csv
+*.tsv
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.log
+*.out
+*.dat
+*.tex
+*.aux
+*.toc
+*.fdb_latexmk
+*.fls
