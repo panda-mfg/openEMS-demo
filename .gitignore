@@ -7,7 +7,7 @@ venv/
 # Build and local-install trees
 build/
 build-*/
-local/
+local
 CMakeFiles/
 
 # Simulation and benchmark run directories

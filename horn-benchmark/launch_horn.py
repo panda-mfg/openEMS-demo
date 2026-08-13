@@ -11,9 +11,8 @@ import time
 import numpy as np
 
 
-TUTORIAL = pathlib.Path(
-    "/home/shanda/openEMS-gpu/openEMS-Project/openEMS/python/Tutorials/"
-    "Horn_Antenna.py")
+TUTORIAL = pathlib.Path(__file__).resolve().parents[1] / \
+    "openEMS/python/Tutorials/Horn_Antenna.py"
 
 
 class SimulationComplete(Exception):
