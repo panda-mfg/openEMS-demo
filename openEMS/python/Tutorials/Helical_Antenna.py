@@ -22,8 +22,15 @@ from openEMS.physical_constants import *
 
 
 ### Setup the simulation
-Sim_Path = os.path.join(tempfile.gettempdir(), 'Helical_Ant')
-force_re_sim = False
+Sim_Path = os.path.abspath(os.environ.get(
+    'OPENEMS_SIM_PATH', os.path.join(tempfile.gettempdir(), 'Helical_Ant')))
+force_re_sim = os.environ.get('OPENEMS_FORCE_RERUN', '').lower() in (
+    '1', 'true', 'yes', 'on')
+nr_ts = int(os.environ.get('OPENEMS_NR_TS', '1000000000'))
+fixed_timesteps = os.environ.get('OPENEMS_FIXED_TIMESTEPS', '').lower() in (
+    '1', 'true', 'yes', 'on')
+skip_plots = os.environ.get('OPENEMS_SKIP_PLOTS', '').lower() in (
+    '1', 'true', 'yes', 'on')
 
 unit = 1e-3 # all length in mm
 
@@ -46,7 +53,7 @@ feed_R = 120    #feed impedance
 SimBox = np.array([1, 1, 1.5])*2.0*lambda0
 
 ### Setup FDTD parameter & excitation function
-FDTD = openEMS(EndCriteria=1e-4)
+FDTD = openEMS(NrTS=nr_ts, EndCriteria=0.0 if fixed_timesteps else 1e-4)
 FDTD.SetGaussExcite( f0, fc )
 FDTD.SetBoundaryCond( ['MUR', 'MUR', 'MUR', 'MUR', 'MUR', 'PML_8'] )
 
@@ -128,7 +135,20 @@ if 0:  # debugging only
     os.system(AppCSXCAD_BIN + ' "{}"'.format(CSX_file))
 
 if force_re_sim or not os.path.exists(os.path.join(Sim_Path, 'et')):
-    FDTD.Run(Sim_Path, cleanup=True)
+    run_options = {'cleanup': True}
+    engine = os.environ.get('OPENEMS_ENGINE')
+    if engine:
+        run_options['engine'] = engine
+    if os.environ.get('OPENEMS_NUM_THREADS'):
+        run_options['numThreads'] = int(os.environ['OPENEMS_NUM_THREADS'])
+    if os.environ.get('OPENEMS_GPU_DEVICE'):
+        run_options['gpu_device'] = int(os.environ['OPENEMS_GPU_DEVICE'])
+    if os.environ.get('OPENEMS_GPU_KERNEL'):
+        run_options['gpu_kernel'] = os.environ['OPENEMS_GPU_KERNEL']
+    if os.environ.get('OPENEMS_DUMP_STATISTICS', '').lower() in (
+            '1', 'true', 'yes', 'on'):
+        run_options['dump_statistics'] = True
+    FDTD.Run(Sim_Path, **run_options)
 
 ### Postprocessing & plotting
 freq = np.linspace( f0-fc, f0+fc, 501 )
@@ -197,5 +217,14 @@ axis.set_title('Frequency: {:.2f} GHz'.format(nf2ff_res.freq[0]/1e9))
 axis.legend()
 
 
-# show all plots
-plt.show()
+# Save plots for headless/local runs and optionally show them interactively.
+os.makedirs(Sim_Path, exist_ok=True)
+for figure_name, filename in (
+        ('Zin', 'feed_impedance.png'),
+        ('S11', 'reflection_coefficient.png'),
+        ('Pattern', 'radiation_pattern.png')):
+    plt.figure(figure_name).savefig(
+        os.path.join(Sim_Path, filename), dpi=160, bbox_inches='tight')
+
+if not skip_plots:
+    plt.show()
